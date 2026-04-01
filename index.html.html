@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quality & Operations Hub — TCGroup</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#0d2c6e; --navy-mid:#1a3d8a; --navy-light:#e8edf8;
+  --accent:#2563eb; --white:#fff; --bg:#f5f6f8; --surface:#fff;
+  --border:#e4e6eb; --border-mid:#d0d3db;
+  --text:#1a1d23; --text-2:#5a5f6e; --text-3:#9ba3b5;
+  --ok-bg:#e6f4ee; --ok-tx:#0a5c30; --ok-dot:#16a34a;
+  --warn-bg:#fef3e2; --warn-tx:#7a4a00; --warn-dot:#d97706;
+  --alert-bg:#fde8e8; --alert-tx:#891717; --alert-dot:#dc2626;
+  --pend-bg:#f0f1f3; --pend-tx:#5a5f6e; --pend-dot:#9ba3b5;
+  --open-bg:#eff6ff; --open-tx:#1e40af;
+  --prog-bg:#f0e9ff; --prog-tx:#5b21b6;
+  --block-bg:#fde8e8; --block-tx:#891717;
+  --done-bg:#e6f4ee; --done-tx:#0a5c30;
+  --cmh-bg:#dbeafe; --cmh-tx:#1e3a8a;
+  --szz-bg:#d1fae5; --szz-tx:#064e3b;
+  --all-bg:#ede9fe; --all-tx:#3730a3;
+  --radius:8px; --radius-lg:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;font-size:13.5px;color:var(--text);background:var(--bg);min-height:100vh;}
+
+.header{background:var(--navy);padding:0 32px;display:flex;align-items:stretch;position:sticky;top:0;z-index:100;}
+.header-brand{display:flex;flex-direction:column;justify-content:center;padding:14px 24px 14px 0;border-right:1px solid rgba(255,255,255,.12);margin-right:8px;}
+.header-brand-top{font-size:10px;font-weight:500;color:rgba(255,255,255,.5);letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px;}
+.header-brand-name{font-size:15px;font-weight:600;color:#fff;letter-spacing:-.01em;}
+.header-nav{display:flex;align-items:stretch;flex:1;}
+.nav-btn{background:none;border:none;border-bottom:2.5px solid transparent;padding:0 18px;font-family:inherit;font-size:13px;font-weight:500;color:rgba(255,255,255,.65);cursor:pointer;transition:color .15s,border-color .15s;white-space:nowrap;}
+.nav-btn:hover{color:rgba(255,255,255,.9);}
+.nav-btn.active{color:#fff;border-bottom-color:#60a5fa;}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;padding-left:16px;}
+.meeting-chip{font-size:11px;font-weight:500;color:rgba(255,255,255,.7);background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;white-space:nowrap;}
+.meeting-chip strong{color:#fff;}
+.avatar{width:30px;height:30px;border-radius:50%;background:#c8a951;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+
+.panel{display:none;padding:28px 32px 48px;}
+.panel.active{display:block;}
+.page-title{font-size:20px;font-weight:600;color:var(--text);margin-bottom:4px;letter-spacing:-.02em;}
+.page-sub{font-size:13px;color:var(--text-2);margin-bottom:24px;}
+
+/* Loading / error */
+.loading-bar{display:flex;align-items:center;gap:10px;padding:16px 20px;background:var(--navy-light);border-radius:var(--radius);margin-bottom:20px;font-size:13px;color:var(--navy);}
+.spinner{width:16px;height:16px;border:2px solid var(--navy-light);border-top-color:var(--navy);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.error-bar{display:flex;align-items:center;gap:10px;padding:14px 18px;background:var(--alert-bg);border:1px solid #fca5a5;border-radius:var(--radius);margin-bottom:20px;font-size:13px;color:var(--alert-tx);}
+
+/* Summary cards */
+.summary-row{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 20px;min-width:110px;box-shadow:var(--shadow);}
+.sum-num{font-size:26px;font-weight:700;line-height:1;font-family:'DM Mono',monospace;margin-bottom:4px;}
+.sum-label{font-size:11px;font-weight:500;color:var(--text-2);text-transform:uppercase;letter-spacing:.05em;}
+.sum-card.s-alert .sum-num{color:var(--alert-tx);}
+.sum-card.s-warn  .sum-num{color:var(--warn-tx);}
+.sum-card.s-ok    .sum-num{color:var(--ok-tx);}
+.sum-card.s-pend  .sum-num{color:var(--text-2);}
+
+/* Toolbar */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.tb-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--border-mid);border-radius:var(--radius);background:var(--surface);font-family:inherit;font-size:12.5px;font-weight:500;color:var(--text);cursor:pointer;transition:background .12s;box-shadow:var(--shadow);}
+.tb-btn:hover{background:var(--bg);}
+.tb-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
+.tb-btn.primary:hover{background:var(--navy-mid);}
+.tb-btn:disabled{opacity:.5;cursor:not-allowed;}
+.tb-sep{width:1px;height:20px;background:var(--border);margin:0 2px;}
+.filter-pill{font-size:11.5px;font-weight:500;padding:5px 12px;border:1px solid var(--border-mid);border-radius:20px;background:var(--surface);color:var(--text-2);cursor:pointer;transition:all .12s;box-shadow:var(--shadow);}
+.filter-pill.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+.filter-pill.alert-pill{background:var(--alert-bg);color:var(--alert-tx);border-color:#fca5a5;}
+
+/* Table */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow);}
+.sp-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;}
+.sp-table thead th{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text-3);padding:10px 12px;text-align:left;background:#fafbfc;border-bottom:1px solid var(--border);white-space:nowrap;}
+.group-row td{background:#f5f6f8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);padding:7px 12px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+.group-count{font-weight:400;opacity:.7;margin-left:4px;}
+.data-row{border-bottom:1px solid #f0f1f3;cursor:pointer;transition:background .1s;}
+.data-row:last-child{border-bottom:none;}
+.data-row:hover{background:#f8f9fb;}
+.data-row.overdue-row{background:#fff8f8;}
+.data-row.overdue-row:hover{background:#fff0f0;}
+.data-row.done-row{opacity:.6;}
+.data-row td{padding:10px 12px;vertical-align:middle;}
+
+/* Badges */
+.pill{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;line-height:1.6;}
+.p-cmh{background:var(--cmh-bg);color:var(--cmh-tx);}
+.p-szz{background:var(--szz-bg);color:var(--szz-tx);}
+.p-all{background:var(--all-bg);color:var(--all-tx);}
+.status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.status::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.s-ok{background:var(--ok-bg);color:var(--ok-tx);}    .s-ok::before{background:var(--ok-dot);}
+.s-warn{background:var(--warn-bg);color:var(--warn-tx);} .s-warn::before{background:var(--warn-dot);}
+.s-alert{background:var(--alert-bg);color:var(--alert-tx);} .s-alert::before{background:var(--alert-dot);}
+.s-pend{background:var(--pend-bg);color:var(--pend-tx);} .s-pend::before{background:var(--pend-dot);}
+.s-open{background:var(--open-bg);color:var(--open-tx);} .s-open::before{background:#3b82f6;}
+.s-prog{background:var(--prog-bg);color:var(--prog-tx);} .s-prog::before{background:#7c3aed;}
+.s-block{background:var(--block-bg);color:var(--block-tx);} .s-block::before{background:#dc2626;}
+.s-done{background:var(--done-bg);color:var(--done-tx);} .s-done::before{background:#16a34a;}
+.prio{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.pr-h{background:var(--alert-bg);color:var(--alert-tx);}
+.pr-m{background:var(--warn-bg);color:var(--warn-tx);}
+.pr-l{background:var(--pend-bg);color:var(--pend-tx);}
+.own{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:22px;padding:0 7px;background:var(--navy-light);border-radius:20px;font-size:11px;font-weight:600;color:var(--navy);font-family:'DM Mono',monospace;}
+.due-ok{font-size:12px;color:var(--text-2);}
+.due-soon{font-size:12px;color:var(--warn-tx);font-weight:600;}
+.due-over{font-size:12px;color:var(--alert-tx);font-weight:600;}
+.src-link{font-size:12px;color:var(--accent);text-decoration:none;font-weight:500;}
+.src-link:hover{text-decoration:underline;}
+.note-text{font-size:12px;color:var(--text-2);line-height:1.4;}
+.note-empty{font-size:12px;color:var(--text-3);font-style:italic;}
+.action-name{font-weight:500;color:var(--text);line-height:1.4;}
+.action-sub{font-size:11px;color:var(--text-3);margin-top:2px;}
+.id-chip{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius-lg);width:480px;max-width:calc(100vw - 32px);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.modal-title{font-size:15px;font-weight:600;color:var(--text);line-height:1.4;}
+.modal-sub{font-size:12px;color:var(--text-2);margin-top:2px;}
+.modal-close{background:none;border:none;font-size:18px;color:var(--text-3);cursor:pointer;padding:2px 6px;border-radius:4px;}
+.modal-close:hover{background:var(--bg);color:var(--text);}
+.modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:16px;}
+.field-group{display:flex;flex-direction:column;gap:6px;}
+.field-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);}
+.field-select,.field-textarea,.field-input{width:100%;border:1px solid var(--border-mid);border-radius:var(--radius);padding:9px 12px;font-family:inherit;font-size:13px;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+.field-select:focus,.field-textarea:focus,.field-input:focus{border-color:var(--accent);}
+.field-textarea{resize:vertical;min-height:90px;line-height:1.6;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.btn-cancel{padding:8px 16px;border:1px solid var(--border-mid);border-radius:var(--radius);background:var(--surface);font-family:inherit;font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;}
+.btn-cancel:hover{background:var(--bg);}
+.btn-save{padding:8px 20px;border:none;border-radius:var(--radius);background:var(--navy);color:#fff;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .12s;}
+.btn-save:hover{background:var(--navy-mid);}
+.btn-save:disabled{opacity:.5;cursor:not-allowed;}
+.overdue-banner{background:var(--alert-bg);border:1px solid #fca5a5;border-radius:var(--radius);padding:8px 12px;font-size:12px;color:var(--alert-tx);font-weight:500;}
+
+/* Archive */
+.archive-entry{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow);}
+.archive-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;cursor:pointer;user-select:none;transition:background .1s;}
+.archive-hdr:hover{background:var(--bg);}
+.archive-date{font-weight:600;font-size:14px;}
+.archive-meta{font-size:12px;color:var(--text-3);margin-top:2px;}
+.archive-chev{color:var(--text-3);font-size:11px;transition:transform .2s;}
+.archive-chev.open{transform:rotate(180deg);}
+.archive-body{padding:0 20px;max-height:0;overflow:hidden;transition:max-height .25s ease,padding .25s;}
+.archive-body.open{max-height:500px;padding:16px 20px;}
+.archive-textarea{width:100%;min-height:130px;border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;font-family:inherit;font-size:13px;color:var(--text);line-height:1.6;resize:vertical;outline:none;background:var(--bg);}
+.archive-textarea:focus{border-color:var(--accent);background:var(--surface);}
+.add-entry-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;transition:background .12s;}
+.add-entry-btn:hover{background:var(--navy-mid);}
+.save-note-btn{margin-top:8px;padding:7px 14px;background:var(--navy);color:#fff;border:none;border-radius:var(--radius);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;}
+.save-note-btn:hover{background:var(--navy-mid);}
+
+body.readonly .data-row { cursor: default; }
+body.readonly .data-row:hover { background: inherit; }
+body.readonly .tb-btn.primary { display: none; }
+body.readonly #reset-btn { display: none; }
+body.readonly .add-entry-btn { display: none; }
+body.readonly .save-note-btn { display: none; }
+body.readonly .archive-textarea { pointer-events: none; background: var(--bg); }
+body.readonly .readonly-badge { display: inline-flex !important; }
+
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="header-brand-top">The Customization Group</div>
+    <div class="header-brand-name">Quality &amp; Operations Hub</div>
+  </div>
+  <nav class="header-nav">
+    <button class="nav-btn active" onclick="showTab('agenda',this)">Weekly Quality Review</button>
+    <button class="nav-btn" onclick="showTab('openitems',this)">Open items</button>
+    <button class="nav-btn" onclick="showTab('archive',this)">Archive</button>
+  </nav>
+  <div class="header-right">
+    <span class="meeting-chip">Next: <strong id="next-date">—</strong></span>
+    <span class="readonly-badge" style="display:none;font-size:11px;font-weight:600;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:3px 10px;">View only</span>
+    <div class="avatar">AG</div>
+  </div>
+</header>
+
+<!-- AGENDA -->
+<div id="tab-agenda" class="panel active">
+  <div class="page-title">Weekly Quality Review</div>
+  <div class="page-sub">Agenda · CMH &amp; SZZ · Owners update Status and Notes by Tuesday EOD</div>
+  <div id="agenda-loading" class="loading-bar"><div class="spinner"></div>Loading agenda from Airtable…</div>
+  <div id="agenda-error" class="error-bar" style="display:none"></div>
+  <div id="agenda-summary" class="summary-row"></div>
+  <div class="toolbar">
+    <div style="display:flex;gap:6px;">
+      <span class="filter-pill active" onclick="filterAgenda('all',this)">All sites</span>
+      <span class="filter-pill" onclick="filterAgenda('CMH',this)">CMH</span>
+      <span class="filter-pill" onclick="filterAgenda('SZZ',this)">SZZ</span>
+    </div>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="resetAllStatus()" id="reset-btn">↺ Reset all to Pending</button>
+  </div>
+  <div class="table-card">
+    <table class="sp-table"><thead><tr>
+      <th style="width:14%">Process</th><th style="width:18%">KPI</th><th style="width:6%">Unit</th>
+      <th style="width:8%">Site</th><th style="width:8%">Owner</th><th style="width:11%">Status</th>
+      <th style="width:9%">Source</th><th style="width:26%">Notes / highlights</th>
+    </tr></thead><tbody id="agenda-body"></tbody></table>
+  </div>
+</div>
+
+<!-- OPEN ITEMS -->
+<div id="tab-openitems" class="panel">
+  <div class="page-title">Open items</div>
+  <div class="page-sub">Action plans · managed by AGA · owners update their own rows</div>
+  <div id="oi-loading" class="loading-bar"><div class="spinner"></div>Loading open items from Airtable…</div>
+  <div id="oi-error" class="error-bar" style="display:none"></div>
+  <div id="oi-summary" class="summary-row"></div>
+  <div class="toolbar">
+    <button class="tb-btn primary" onclick="openNewAction()">+ New action</button>
+    <div class="tb-sep"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <span class="filter-pill active" onclick="filterOI('all',this)">All</span>
+      <span class="filter-pill" onclick="filterOI('overdue',this)" id="overdue-pill">Overdue</span>
+      <span class="filter-pill" onclick="filterOI('mine',this)">My actions (AGA)</span>
+      <span class="filter-pill" onclick="filterOI('CMH',this)">CMH</span>
+      <span class="filter-pill" onclick="filterOI('SZZ',this)">SZZ</span>
+    </div>
+  </div>
+  <div class="table-card">
+    <table class="sp-table"><thead><tr>
+      <th style="width:6%">ID</th><th style="width:24%">Action item</th><th style="width:12%">Section</th>
+      <th style="width:7%">Site</th><th style="width:7%">Owner</th><th style="width:9%">Due date</th>
+      <th style="width:7%">Priority</th><th style="width:10%">Status</th><th style="width:18%">Latest update</th>
+    </tr></thead><tbody id="oi-body"></tbody></table>
+  </div>
+</div>
+
+<!-- ARCHIVE -->
+<div id="tab-archive" class="panel">
+  <div class="page-title">Archive</div>
+  <div class="page-sub">One entry per meeting · saved to Airtable</div>
+  <div id="arch-loading" class="loading-bar"><div class="spinner"></div>Loading archive from Airtable…</div>
+  <div id="arch-error" class="error-bar" style="display:none"></div>
+  <div id="archive-list"></div>
+  <button class="add-entry-btn" onclick="addArchiveEntry()">+ Add this week's entry</button>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalBg(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title" id="modal-title"></div><div class="modal-sub" id="modal-sub"></div></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="modal-save-btn">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const AT_TOKEN = localStorage.getItem('qh_at_token') || '';
+const AT_BASE = localStorage.getItem('qh_at_base') || '';
+const AT_AGENDA = 'Agenda';
+const AT_OI     = 'OpenItems';
+const AT_ARCH   = 'Archive';
+const AT_URL    = `https://api.airtable.com/v0/${AT_BASE}`;
+const HEADERS   = { 'Authorization': `Bearer ${AT_TOKEN}`, 'Content-Type': 'application/json' };
+
+let agendaRecords = [], oiRecords = [], archiveRecords = [];
+let agendaFilter = 'all', oiFilter = 'all';
+let editingRecordId = null, editingType = null;
+
+const sections = ['General','Reclamations','Raw materials','Internal quality','Scrap','Customer service','Specific analysis'];
+
+// ── Airtable API ──────────────────────────────────
+async function atFetch(table, opts={}) {
+  let url = `${AT_URL}/${encodeURIComponent(table)}`;
+  if(opts.params) url += '?' + new URLSearchParams(opts.params);
+  const res = await fetch(url, { method: opts.method||'GET', headers: HEADERS, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  if(!res.ok) throw new Error(`Airtable error ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+
+async function atGetAll(table) {
+  let records = [], offset;
+  do {
+    const params = { pageSize: 100 };
+    if(offset) params.offset = offset;
+    const data = await atFetch(table, { params });
+    records = records.concat(data.records);
+    offset = data.offset;
+  } while(offset);
+  return records;
+}
+
+async function atCreate(table, fields) {
+  return atFetch(table, { method:'POST', body:{ records:[{ fields }] }});
+}
+
+async function atUpdate(table, id, fields) {
+  return atFetch(table+'/'+id, { method:'PATCH', body:{ fields }});
+}
+
+// ── Helpers ───────────────────────────────────────
+function sitePill(s) {
+  const c = s==='CMH'?'p-cmh':s==='SZZ'?'p-szz':'p-all';
+  return `<span class="pill ${c}">${s||'All'}</span>`;
+}
+function statusBadge(s, type='agenda') {
+  const m = type==='agenda'
+    ? {'On track':'s-ok','Watch':'s-warn','Alert':'s-alert','Pending':'s-pend'}
+    : {'Open':'s-open','In progress':'s-prog','Blocked':'s-block','Done':'s-done'};
+  return `<span class="status ${m[s]||'s-pend'}">${s||'Pending'}</span>`;
+}
+function prioBadge(p) {
+  return `<span class="prio ${p==='High'?'pr-h':p==='Medium'?'pr-m':'pr-l'}">${p||'Low'}</span>`;
+}
+function isOverdue(due) { return due && new Date(due) < new Date(); }
+function fmtDate(d) {
+  if(!d) return '—';
+  const dt = new Date(d+'T12:00:00');
+  return `${dt.getDate()} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][dt.getMonth()]} ${dt.getFullYear()}`;
+}
+function dueCls(due, status) {
+  if(status==='Done'||!due) return 'due-ok';
+  const diff=(new Date(due)-new Date())/(864e5);
+  return diff<0?'due-over':diff<7?'due-soon':'due-ok';
+}
+function showLoading(id, show) { document.getElementById(id).style.display = show?'flex':'none'; }
+function showError(id, msg) {
+  const el=document.getElementById(id);
+  el.style.display=msg?'flex':'none';
+  el.textContent=msg||'';
+}
+
+// ── TABS ──────────────────────────────────────────
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── AGENDA ───────────────────────────────────────
+async function loadAgenda() {
+  showLoading('agenda-loading', true);
+  showError('agenda-error','');
+  try {
+    const data = await atGetAll(AT_AGENDA);
+    agendaRecords = data;
+    renderAgenda();
+    showLoading('agenda-loading', false);
+  } catch(e) {
+    showLoading('agenda-loading', false);
+    // Table might not exist yet — seed it
+    if(e.message.includes('404')||e.message.includes('Could not find')) {
+      await seedAgenda();
+    } else {
+      showError('agenda-error', '⚠ Could not load agenda: '+e.message);
+    }
+  }
+}
+
+async function seedAgenda() {
+  showLoading('agenda-loading', true);
+  const rows = [
+    { Process:'Open items',       KPI:'Action plans',        Unit:'—',       Section:'General',           Site:'All', Owner:'AGA', Status:'Pending', SourceLabel:'ClickUp',   Notes:'' },
+    { Process:'Complaints',       KPI:'Volume',              Unit:'Qty',     Section:'Reclamations',      Site:'All', Owner:'AWO', Status:'Pending', SourceLabel:'Freshdesk', Notes:'' },
+    { Process:'Complaints',       KPI:'Rate',                Unit:'%',       Section:'Reclamations',      Site:'All', Owner:'JBA', Status:'Pending', SourceLabel:'Power BI',  Notes:'' },
+    { Process:'Reorders',         KPI:'Rate & examples',     Unit:'% / Qty', Section:'Reclamations',      Site:'All', Owner:'AWO', Status:'Pending', SourceLabel:'Power BI',  Notes:'' },
+    { Process:'Incoming quality', KPI:'Acceptance rate',     Unit:'%',       Section:'Raw materials',     Site:'CMH', Owner:'TWE', Status:'Pending', SourceLabel:'Excel',     Notes:'' },
+    { Process:'Incoming quality', KPI:'Acceptance rate',     Unit:'%',       Section:'Raw materials',     Site:'SZZ', Owner:'MGI', Status:'Pending', SourceLabel:'Excel',     Notes:'' },
+    { Process:'Line checks',      KPI:'Pass rate',           Unit:'%',       Section:'Internal quality',  Site:'CMH', Owner:'EDA', Status:'Pending', SourceLabel:'Sheet',     Notes:'' },
+    { Process:'Line checks',      KPI:'Pass rate',           Unit:'%',       Section:'Internal quality',  Site:'SZZ', Owner:'JGR', Status:'Pending', SourceLabel:'Sheet',     Notes:'' },
+    { Process:'New product',      KPI:'Tests & sign-off',    Unit:'—',       Section:'Internal quality',  Site:'SZZ', Owner:'KKR', Status:'Pending', SourceLabel:'Sheet',     Notes:'' },
+    { Process:'Scrap rate',       KPI:'Scrap rate',          Unit:'%',       Section:'Scrap',             Site:'CMH', Owner:'TWE', Status:'Pending', SourceLabel:'Power BI',  Notes:'' },
+    { Process:'Scrap rate',       KPI:'Scrap rate',          Unit:'%',       Section:'Scrap',             Site:'SZZ', Owner:'AWO', Status:'Pending', SourceLabel:'Excel',     Notes:'' },
+    { Process:'CS feedback',      KPI:'Open tickets',        Unit:'#',       Section:'Customer service',  Site:'CMH', Owner:'MPR', Status:'Pending', SourceLabel:'Tool',      Notes:'' },
+    { Process:'CS feedback',      KPI:'Open tickets',        Unit:'#',       Section:'Customer service',  Site:'SZZ', Owner:'LFM', Status:'Pending', SourceLabel:'Tool',      Notes:'' },
+    { Process:'Ad-hoc',           KPI:'Varied / sheet review',Unit:'Spec.',  Section:'Specific analysis', Site:'All', Owner:'TBD', Status:'Pending', SourceLabel:'—',         Notes:'' },
+  ];
+  try {
+    // Airtable allows max 10 records per create call
+    for(let i=0;i<rows.length;i+=10) {
+      const batch = rows.slice(i,i+10);
+      await atFetch(AT_AGENDA, { method:'POST', body:{ records: batch.map(f=>({fields:f})) }});
+    }
+    await loadAgenda();
+  } catch(e) {
+    showLoading('agenda-loading', false);
+    showError('agenda-error', '⚠ Could not seed agenda. Make sure the Agenda table exists in Airtable with these fields: Process, KPI, Unit, Section, Site, Owner, Status, SourceLabel, Source, Notes. Error: '+e.message);
+  }
+}
+
+function renderAgenda() {
+  const filtered = agendaFilter==='all' ? agendaRecords : agendaRecords.filter(r=>{
+    const site = r.fields.Site||'All';
+    return site===agendaFilter||site==='All';
+  });
+  const bySec = {};
+  sections.forEach(s=>bySec[s]=[]);
+  filtered.forEach(r=>{ const s=r.fields.Section||'General'; if(bySec[s]) bySec[s].push(r); });
+
+  let html='';
+  sections.forEach(sec=>{
+    const rows=bySec[sec]; if(!rows.length) return;
+    html+=`<tr class="group-row"><td colspan="8">▼ ${sec} <span class="group-count">(${rows.length})</span></td></tr>`;
+    rows.forEach(r=>{
+      const f=r.fields;
+      html+=`<tr class="data-row" onclick="if(!document.body.classList.contains('readonly')) openAgendaEdit('${r.id}')">
+        <td>${f.Process||''}</td>
+        <td style="font-weight:500">${f.KPI||''}</td>
+        <td style="color:var(--text-3)">${f.Unit||''}</td>
+        <td>${sitePill(f.Site)}</td>
+        <td><span class="own">${f.Owner||'—'}</span></td>
+        <td>${statusBadge(f.Status,'agenda')}</td>
+        <td>${f.SourceLabel&&f.SourceLabel!=='—'?`<a href="${f.Source||'#'}" class="src-link" onclick="event.stopPropagation()">${f.SourceLabel} ↗</a>`:'—'}</td>
+        <td>${f.Notes?`<span class="note-text">${f.Notes}</span>`:`<span class="note-empty">Click to add notes…</span>`}</td>
+      </tr>`;
+    });
+  });
+  document.getElementById('agenda-body').innerHTML = html||'<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text-3)">No rows found.</td></tr>';
+
+  // Summary
+  const counts={ok:0,warn:0,alert:0,pend:0};
+  agendaRecords.forEach(r=>{
+    const s=r.fields.Status;
+    if(s==='On track') counts.ok++;
+    else if(s==='Watch') counts.warn++;
+    else if(s==='Alert') counts.alert++;
+    else counts.pend++;
+  });
+  document.getElementById('agenda-summary').innerHTML=`
+    <div class="sum-card s-alert"><div class="sum-num">${counts.alert}</div><div class="sum-label">Alert</div></div>
+    <div class="sum-card s-warn"><div class="sum-num">${counts.warn}</div><div class="sum-label">Watch</div></div>
+    <div class="sum-card s-ok"><div class="sum-num">${counts.ok}</div><div class="sum-label">On track</div></div>
+    <div class="sum-card s-pend"><div class="sum-num">${counts.pend}</div><div class="sum-label">Pending</div></div>`;
+}
+
+function filterAgenda(f,el) {
+  agendaFilter=f;
+  document.querySelectorAll('#tab-agenda .filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderAgenda();
+}
+
+async function resetAllStatus() {
+  if(!confirm('Reset all Status and Notes to Pending?')) return;
+  document.getElementById('reset-btn').disabled=true;
+  try {
+    for(let i=0;i<agendaRecords.length;i+=10) {
+      const batch=agendaRecords.slice(i,i+10);
+      await atFetch(AT_AGENDA, { method:'PATCH', body:{ records: batch.map(r=>({ id:r.id, fields:{Status:'Pending',Notes:''} })) }});
+    }
+    await loadAgenda();
+  } catch(e) { showError('agenda-error','⚠ Reset failed: '+e.message); }
+  document.getElementById('reset-btn').disabled=false;
+}
+
+function openAgendaEdit(id) {
+  const r=agendaRecords.find(x=>x.id===id); if(!r) return;
+  const f=r.fields;
+  editingType='agenda'; editingRecordId=id;
+  document.getElementById('modal-title').textContent=`${f.Process} — ${f.KPI}`;
+  document.getElementById('modal-sub').textContent=`${f.Section} · ${f.Site} · Owner: ${f.Owner}`;
+  document.getElementById('modal-body').innerHTML=`
+    <div class="field-group"><label class="field-label">Status</label>
+      <select class="field-select" id="m-status">
+        ${['Pending','On track','Watch','Alert'].map(s=>`<option ${s===f.Status?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label class="field-label">Source URL</label>
+      <input class="field-input" id="m-source" value="${f.Source||''}" placeholder="https://…"></div>
+    <div class="field-group"><label class="field-label">Source label</label>
+      <input class="field-input" id="m-sourcelabel" value="${f.SourceLabel||''}" placeholder="Power BI, Freshdesk…"></div>
+    <div class="field-group"><label class="field-label">Notes / highlights</label>
+      <textarea class="field-textarea" id="m-notes" placeholder="Add notes for this week…">${f.Notes||''}</textarea></div>`;
+  document.getElementById('modal-save-btn').onclick=saveAgendaEdit;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function saveAgendaEdit() {
+  const btn=document.getElementById('modal-save-btn');
+  btn.disabled=true; btn.textContent='Saving…';
+  try {
+    await atUpdate(AT_AGENDA, editingRecordId, {
+      Status: document.getElementById('m-status').value,
+      Source: document.getElementById('m-source').value.trim(),
+      SourceLabel: document.getElementById('m-sourcelabel').value.trim(),
+      Notes: document.getElementById('m-notes').value.trim(),
+    });
+    await loadAgenda();
+    closeModal();
+  } catch(e) { showError('agenda-error','⚠ Save failed: '+e.message); }
+  btn.disabled=false; btn.textContent='Save changes';
+}
+
+// ── OPEN ITEMS ────────────────────────────────────
+async function loadOI() {
+  showLoading('oi-loading', true);
+  showError('oi-error','');
+  try {
+    const data = await atGetAll(AT_OI);
+    oiRecords = data;
+    renderOI();
+    showLoading('oi-loading', false);
+  } catch(e) {
+    showLoading('oi-loading', false);
+    if(e.message.includes('404')||e.message.includes('Could not find')) {
+      showError('oi-error','⚠ OpenItems table not found in Airtable. Create a table named "OpenItems" with fields: ActionItem, Sub, Section, Site, Owner, DueDate, Priority, Status, Notes. Then reload.');
+    } else {
+      showError('oi-error','⚠ Could not load open items: '+e.message);
+    }
+  }
+}
+
+function renderOI() {
+  const today=new Date();
+  let filtered=[...oiRecords];
+  if(oiFilter==='overdue') filtered=filtered.filter(r=>r.fields.Status!=='Done'&&isOverdue(r.fields.DueDate));
+  else if(oiFilter==='mine') filtered=filtered.filter(r=>r.fields.Owner==='AGA');
+  else if(oiFilter==='CMH') filtered=filtered.filter(r=>['CMH','All'].includes(r.fields.Site));
+  else if(oiFilter==='SZZ') filtered=filtered.filter(r=>['SZZ','All'].includes(r.fields.Site));
+
+  const bySec={};
+  sections.forEach(s=>bySec[s]=[]);
+  filtered.forEach(r=>{ const s=r.fields.Section||'General'; if(bySec[s]) bySec[s].push(r); });
+
+  let html='';
+  sections.forEach(sec=>{
+    const rows=bySec[sec]; if(!rows.length) return;
+    html+=`<tr class="group-row"><td colspan="9">▼ ${sec} <span class="group-count">(${rows.length})</span></td></tr>`;
+    rows.forEach(r=>{
+      const f=r.fields;
+      const over=f.Status!=='Done'&&isOverdue(f.DueDate);
+      const done=f.Status==='Done';
+      html+=`<tr class="data-row ${over?'overdue-row':''} ${done?'done-row':''}" onclick="if(!document.body.classList.contains('readonly')) openOIEdit('${r.id}')">
+        <td><span class="id-chip">${f.ItemID||r.id.slice(-4)}</span></td>
+        <td><div class="action-name">${f.ActionItem||''}</div><div class="action-sub">${f.Sub||''}</div></td>
+        <td style="font-size:12px;color:var(--text-2)">${f.Section||''}</td>
+        <td>${sitePill(f.Site)}</td>
+        <td><span class="own">${f.Owner||'—'}</span></td>
+        <td><span class="${dueCls(f.DueDate,f.Status)}">${fmtDate(f.DueDate)}${over?' ↑':''}</span></td>
+        <td>${prioBadge(f.Priority)}</td>
+        <td>${statusBadge(f.Status,'oi')}</td>
+        <td>${f.Notes?`<span class="note-text">${f.Notes}</span>`:`<span class="note-empty">No update yet</span>`}</td>
+      </tr>`;
+    });
+  });
+
+  document.getElementById('oi-body').innerHTML=html||'<tr><td colspan="9" style="padding:32px;text-align:center;color:var(--text-3)">No items. Click "+ New action" to add one.</td></tr>';
+
+  // Summary
+  const overdue=oiRecords.filter(r=>r.fields.Status!=='Done'&&isOverdue(r.fields.DueDate)).length;
+  const inprog=oiRecords.filter(r=>r.fields.Status==='In progress').length;
+  const open=oiRecords.filter(r=>r.fields.Status==='Open').length;
+  const done=oiRecords.filter(r=>r.fields.Status==='Done').length;
+  const pill=document.getElementById('overdue-pill');
+  if(overdue>0){pill.classList.add('alert-pill');pill.textContent=`Overdue ×${overdue}`;}
+  else{pill.classList.remove('alert-pill');pill.textContent='Overdue';}
+  document.getElementById('oi-summary').innerHTML=`
+    <div class="sum-card s-alert"><div class="sum-num">${overdue}</div><div class="sum-label">Overdue</div></div>
+    <div class="sum-card s-warn"><div class="sum-num">${inprog}</div><div class="sum-label">In progress</div></div>
+    <div class="sum-card s-pend"><div class="sum-num">${open}</div><div class="sum-label">Open</div></div>
+    <div class="sum-card s-ok"><div class="sum-num">${done}</div><div class="sum-label">Done</div></div>`;
+}
+
+function filterOI(f,el) {
+  oiFilter=f;
+  document.querySelectorAll('#tab-openitems .filter-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderOI();
+}
+
+function openOIEdit(id) {
+  const r=oiRecords.find(x=>x.id===id); if(!r) return;
+  const f=r.fields;
+  const over=f.Status!=='Done'&&isOverdue(f.DueDate);
+  editingType='oi'; editingRecordId=id;
+  document.getElementById('modal-title').textContent=f.ActionItem||'Edit action';
+  document.getElementById('modal-sub').textContent=`${f.Section||''} · ${f.Site||''} · Owner: ${f.Owner||''}`;
+  document.getElementById('modal-body').innerHTML=`
+    ${over?`<div class="overdue-banner">⚠ Overdue — was due ${fmtDate(f.DueDate)}</div>`:''}
+    <div class="field-group"><label class="field-label">Status</label>
+      <select class="field-select" id="m-oi-status">
+        ${['Open','In progress','Blocked','Done'].map(s=>`<option ${s===f.Status?'selected':''}>${s}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label class="field-label">Priority</label>
+      <select class="field-select" id="m-oi-prio">
+        ${['High','Medium','Low'].map(p=>`<option ${p===f.Priority?'selected':''}>${p}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label class="field-label">Due date</label>
+      <input type="date" class="field-input" id="m-oi-due" value="${f.DueDate||''}"></div>
+    <div class="field-group"><label class="field-label">Latest update</label>
+      <textarea class="field-textarea" id="m-oi-notes" placeholder="What's the latest? Any blockers?">${f.Notes||''}</textarea></div>`;
+  document.getElementById('modal-save-btn').onclick=saveOIEdit;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function saveOIEdit() {
+  const btn=document.getElementById('modal-save-btn');
+  btn.disabled=true; btn.textContent='Saving…';
+  try {
+    await atUpdate(AT_OI, editingRecordId, {
+      Status: document.getElementById('m-oi-status').value,
+      Priority: document.getElementById('m-oi-prio').value,
+      DueDate: document.getElementById('m-oi-due').value,
+      Notes: document.getElementById('m-oi-notes').value.trim(),
+    });
+    await loadOI();
+    closeModal();
+  } catch(e) { showError('oi-error','⚠ Save failed: '+e.message); }
+  btn.disabled=false; btn.textContent='Save changes';
+}
+
+function openNewAction() {
+  editingType='oi-new'; editingRecordId=null;
+  document.getElementById('modal-title').textContent='New action item';
+  document.getElementById('modal-sub').textContent="Add a new action from this week's meeting";
+  document.getElementById('modal-body').innerHTML=`
+    <div class="field-group"><label class="field-label">Action item</label>
+      <input class="field-input" id="m-new-action" placeholder="Describe the action…"></div>
+    <div class="field-group"><label class="field-label">Section</label>
+      <select class="field-select" id="m-new-section">
+        ${sections.map(s=>`<option>${s}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label class="field-label">Site</label>
+      <select class="field-select" id="m-new-site">
+        ${['All','CMH','SZZ'].map(s=>`<option>${s}</option>`).join('')}
+      </select></div>
+    <div class="field-group"><label class="field-label">Owner (initials)</label>
+      <input class="field-input" id="m-new-owner" placeholder="e.g. AWO"></div>
+    <div class="field-group"><label class="field-label">Due date</label>
+      <input type="date" class="field-input" id="m-new-due"></div>
+    <div class="field-group"><label class="field-label">Priority</label>
+      <select class="field-select" id="m-new-prio">
+        ${['High','Medium','Low'].map(p=>`<option>${p}</option>`).join('')}
+      </select></div>`;
+  document.getElementById('modal-save-btn').onclick=saveNewAction;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+async function saveNewAction() {
+  const action=document.getElementById('m-new-action').value.trim();
+  if(!action){alert('Please enter an action item.');return;}
+  const btn=document.getElementById('modal-save-btn');
+  btn.disabled=true; btn.textContent='Saving…';
+  const today=new Date();
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  try {
+    await atCreate(AT_OI,{
+      ActionItem: action,
+      Sub: `Opened: ${today.getDate()} ${months[today.getMonth()]} · from weekly review`,
+      Section: document.getElementById('m-new-section').value,
+      Site: document.getElementById('m-new-site').value,
+      Owner: document.getElementById('m-new-owner').value.trim()||'TBD',
+      DueDate: document.getElementById('m-new-due').value,
+      Priority: document.getElementById('m-new-prio').value,
+      Status: 'Open',
+      Notes: '',
+    });
+    await loadOI();
+    closeModal();
+  } catch(e) { showError('oi-error','⚠ Could not create action: '+e.message); }
+  btn.disabled=false; btn.textContent='Save changes';
+}
+
+// ── ARCHIVE ───────────────────────────────────────
+async function loadArchive() {
+  showLoading('arch-loading', true);
+  showError('arch-error','');
+  try {
+    const data = await atGetAll(AT_ARCH);
+    archiveRecords = data.sort((a,b)=>new Date(b.fields.MeetingDate||0)-new Date(a.fields.MeetingDate||0));
+    renderArchive();
+    showLoading('arch-loading', false);
+  } catch(e) {
+    showLoading('arch-loading', false);
+    if(e.message.includes('404')||e.message.includes('Could not find')) {
+      showError('arch-error','⚠ Archive table not found. Create a table named "Archive" in Airtable with fields: MeetingDate (Date), Meta (text), Notes (long text). Then reload.');
+    } else {
+      showError('arch-error','⚠ Could not load archive: '+e.message);
+    }
+  }
+}
+
+function renderArchive() {
+  document.getElementById('archive-list').innerHTML = archiveRecords.map((r,i)=>`
+    <div class="archive-entry">
+      <div class="archive-hdr" onclick="toggleArch(${i})">
+        <div>
+          <div class="archive-date">${r.fields.MeetingDate?fmtDate(r.fields.MeetingDate):'No date'}</div>
+          <div class="archive-meta">${r.fields.Meta||'Facilitator: AGA · CMH + SZZ'}</div>
+        </div>
+        <span class="archive-chev ${i===0?'open':''}" id="chev-${i}">▼</span>
+      </div>
+      <div class="archive-body ${i===0?'open':''}" id="arch-body-${i}">
+        <textarea class="archive-textarea" id="arch-ta-${i}" placeholder="Paste meeting notes, decisions, and actions…">${r.fields.Notes||''}</textarea>
+        <button class="save-note-btn" onclick="saveArchiveNote('${r.id}',${i})">Save notes</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleArch(i) {
+  const body=document.getElementById(`arch-body-${i}`);
+  const chev=document.getElementById(`chev-${i}`);
+  const isOpen=body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  chev.classList.toggle('open',!isOpen);
+}
+
+async function saveArchiveNote(id, i) {
+  const notes=document.getElementById(`arch-ta-${i}`).value;
+  try {
+    await atUpdate(AT_ARCH, id, { Notes: notes });
+    const r=archiveRecords.find(x=>x.id===id);
+    if(r) r.fields.Notes=notes;
+  } catch(e) { alert('Save failed: '+e.message); }
+}
+
+async function addArchiveEntry() {
+  const today=new Date();
+  const iso=today.toISOString().split('T')[0];
+  try {
+    await atCreate(AT_ARCH,{
+      MeetingDate: iso,
+      Meta: 'Facilitator: AGA · CMH + SZZ',
+      Notes: '',
+    });
+    await loadArchive();
+  } catch(e) { showError('arch-error','⚠ Could not create entry: '+e.message); }
+}
+
+// ── MODAL ─────────────────────────────────────────
+function closeModalBg(e){ if(e.target===document.getElementById('modal-overlay')) closeModal(); }
+function closeModal(){ document.getElementById('modal-overlay').classList.remove('open'); }
+
+// ── INIT ──────────────────────────────────────────
+function setNextMeeting() {
+  const now=new Date(), diff=(3-now.getDay()+7)%7||7;
+  const next=new Date(now); next.setDate(now.getDate()+diff);
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('next-date').textContent=`Wed ${next.getDate()} ${months[next.getMonth()]} · 09:00 CET`;
+}
+
+checkSetup();
+if(localStorage.getItem('qh_at_token')) { setNextMeeting(); loadAgenda(); loadOI(); loadArchive(); }
+</script>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" style="display:none;position:fixed;inset:0;background:#f5f6f8;z-index:999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border:1px solid #e4e6eb;border-radius:16px;padding:40px;width:460px;max-width:calc(100vw - 32px);box-shadow:0 20px 60px rgba(0,0,0,.12);">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9ba3b5;margin-bottom:6px;">The Customization Group</div>
+    <div style="font-size:22px;font-weight:700;color:#0d2c6e;margin-bottom:4px;letter-spacing:-.02em;">Quality &amp; Operations Hub</div>
+    <div style="font-size:13px;color:#5a5f6e;margin-bottom:28px;">Enter your Airtable credentials to connect. Saved locally in your browser — never shared.</div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:8px;margin-bottom:4px;">
+        <button onclick="setMode('viewer')" id="mode-viewer"
+          style="flex:1;padding:9px;border:2px solid #0d2c6e;border-radius:8px;background:#0d2c6e;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">
+          View only
+        </button>
+        <button onclick="setMode('editor')" id="mode-editor"
+          style="flex:1;padding:9px;border:2px solid #d0d3db;border-radius:8px;background:#fff;color:#5a5f6e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">
+          Editor (facilitator)
+        </button>
+      </div>
+      <div style="font-size:11px;color:#9ba3b5;margin-bottom:16px;">Viewers can see everything but cannot edit. Editors can update status and notes.</div>
+      <div>
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a5f6e;display:block;margin-bottom:6px;">Airtable API Token</label>
+        <input id="setup-token" type="password" placeholder="patXXXXXXXXXXXXXX.XXXX…"
+          style="width:100%;border:1px solid #d0d3db;border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;">
+        <div style="font-size:11px;color:#9ba3b5;margin-top:4px;">Get it at airtable.com/create/tokens</div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a5f6e;display:block;margin-bottom:6px;">Airtable Base ID</label>
+        <input id="setup-base" type="text" placeholder="appXXXXXXXXXXXXXX"
+          style="width:100%;border:1px solid #d0d3db;border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;">
+        <div style="font-size:11px;color:#9ba3b5;margin-top:4px;">From your Airtable URL: airtable.com/<strong>appXXX</strong>/...</div>
+      </div>
+      <div id="setup-error" style="display:none;background:#fde8e8;border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;font-size:12px;color:#891717;"></div>
+      <button onclick="saveSetup()"
+        style="padding:12px;background:#0d2c6e;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+        Connect to Airtable
+      </button>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e4e6eb;font-size:11px;color:#9ba3b5;">
+      Your credentials are stored only in this browser using localStorage. They are never sent anywhere except directly to Airtable.
+      <span style="margin-left:8px;cursor:pointer;color:#2563eb;" onclick="showResetOption()">Change credentials</span>
+    </div>
+  </div>
+</div>
+<script>
+// ── SETUP ─────────────────────────────────────────
+let selectedMode = 'viewer';
+
+function setMode(m) {
+  selectedMode = m;
+  const vBtn = document.getElementById('mode-viewer');
+  const eBtn = document.getElementById('mode-editor');
+  if(m==='viewer') {
+    vBtn.style.background='#0d2c6e'; vBtn.style.color='#fff'; vBtn.style.borderColor='#0d2c6e';
+    eBtn.style.background='#fff'; eBtn.style.color='#5a5f6e'; eBtn.style.borderColor='#d0d3db';
+  } else {
+    eBtn.style.background='#0d2c6e'; eBtn.style.color='#fff'; eBtn.style.borderColor='#0d2c6e';
+    vBtn.style.background='#fff'; vBtn.style.color='#5a5f6e'; vBtn.style.borderColor='#d0d3db';
+  }
+}
+
+function checkSetup() {
+  const token = localStorage.getItem('qh_at_token');
+  const base  = localStorage.getItem('qh_at_base');
+  const mode  = localStorage.getItem('qh_mode') || 'viewer';
+  if(!token || !base) {
+    document.getElementById('setup-screen').style.display = 'flex';
+    document.querySelector('.header').style.display = 'none';
+    document.querySelectorAll('.panel').forEach(p=>p.style.display='none');
+  } else {
+    document.getElementById('setup-screen').style.display = 'none';
+    document.querySelector('.header').style.display = 'flex';
+    if(mode==='viewer') document.body.classList.add('readonly');
+    else document.body.classList.remove('readonly');
+  }
+}
+
+async function saveSetup() {
+  const token = document.getElementById('setup-token').value.trim();
+  const base  = document.getElementById('setup-base').value.trim();
+  const err   = document.getElementById('setup-error');
+  err.style.display = 'none';
+
+  if(!token || !base) {
+    err.style.display = 'block';
+    err.textContent = 'Please enter both the API token and Base ID.';
+    return;
+  }
+  if(!base.startsWith('app')) {
+    err.style.display = 'block';
+    err.textContent = 'Base ID should start with "app" — check your Airtable URL.';
+    return;
+  }
+  try {
+    const res = await fetch(`https://api.airtable.com/v0/${base}/Agenda?pageSize=1`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if(!res.ok) throw new Error('Invalid credentials or table not found.');
+    localStorage.setItem('qh_at_token', token);
+    localStorage.setItem('qh_at_base',  base);
+    localStorage.setItem('qh_mode', selectedMode);
+    location.reload();
+  } catch(e) {
+    err.style.display = 'block';
+    err.textContent = '⚠ Could not connect: ' + e.message;
+  }
+}
+
+function showResetOption() {
+  if(confirm('Clear saved credentials and reconnect?')) {
+    localStorage.removeItem('qh_at_token');
+    localStorage.removeItem('qh_at_base');
+    localStorage.removeItem('qh_mode');
+    location.reload();
+  }
+}
+</script>
+</body>
+</html>
