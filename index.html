@@ -278,6 +278,50 @@ body.readonly .readonly-badge { display: inline-flex !important; }
   </div>
 </div>
 
+<!-- SETUP SCREEN -->
+<div id="setup-screen" style="display:none;position:fixed;inset:0;background:#f5f6f8;z-index:999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#fff;border:1px solid #e4e6eb;border-radius:16px;padding:40px;width:460px;max-width:calc(100vw - 32px);box-shadow:0 20px 60px rgba(0,0,0,.12);">
+    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9ba3b5;margin-bottom:6px;">The Customization Group</div>
+    <div style="font-size:22px;font-weight:700;color:#0d2c6e;margin-bottom:4px;letter-spacing:-.02em;">Quality &amp; Operations Hub</div>
+    <div style="font-size:13px;color:#5a5f6e;margin-bottom:28px;">Enter your Airtable credentials to connect. Saved locally in your browser — never shared.</div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="display:flex;gap:8px;margin-bottom:4px;">
+        <button onclick="setMode('viewer')" id="mode-viewer"
+          style="flex:1;padding:9px;border:2px solid #0d2c6e;border-radius:8px;background:#0d2c6e;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">
+          View only
+        </button>
+        <button onclick="setMode('editor')" id="mode-editor"
+          style="flex:1;padding:9px;border:2px solid #d0d3db;border-radius:8px;background:#fff;color:#5a5f6e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">
+          Editor (facilitator)
+        </button>
+      </div>
+      <div style="font-size:11px;color:#9ba3b5;margin-bottom:16px;">Viewers can see everything but cannot edit. Editors can update status and notes.</div>
+      <div>
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a5f6e;display:block;margin-bottom:6px;">Airtable API Token</label>
+        <input id="setup-token" type="password" placeholder="patXXXXXXXXXXXXXX.XXXX…"
+          style="width:100%;border:1px solid #d0d3db;border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;">
+        <div style="font-size:11px;color:#9ba3b5;margin-top:4px;">Get it at airtable.com/create/tokens</div>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a5f6e;display:block;margin-bottom:6px;">Airtable Base ID</label>
+        <input id="setup-base" type="text" placeholder="appXXXXXXXXXXXXXX"
+          style="width:100%;border:1px solid #d0d3db;border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;">
+        <div style="font-size:11px;color:#9ba3b5;margin-top:4px;">From your Airtable URL: airtable.com/<strong>appXXX</strong>/...</div>
+      </div>
+      <div id="setup-error" style="display:none;background:#fde8e8;border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;font-size:12px;color:#891717;"></div>
+      <button onclick="saveSetup()"
+        style="padding:12px;background:#0d2c6e;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
+        Connect to Airtable
+      </button>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e4e6eb;font-size:11px;color:#9ba3b5;">
+      Your credentials are stored only in this browser using localStorage. They are never sent anywhere except directly to Airtable.
+      <span style="margin-left:8px;cursor:pointer;color:#2563eb;" onclick="showResetOption()">Change credentials</span>
+    </div>
+  </div>
+</div>
+
 <script>
 const AT_TOKEN = localStorage.getItem('qh_at_token') || '';
 const AT_BASE = localStorage.getItem('qh_at_base') || '';
@@ -382,14 +426,13 @@ async function loadAgenda() {
     renderAgenda();
     showLoading('agenda-loading', false);
     tabLoaded['agenda'] = true;
+    if(agendaRecords.length===0) {
+      document.getElementById('agenda-body').innerHTML='<tr><td colspan="6" style="padding:32px;text-align:center;color:var(--text-3)">No rows found in Airtable. Add rows to your Agenda table.</td></tr>';
+    }
   } catch(e) {
     showLoading('agenda-loading', false);
     // Table might not exist yet — seed it
-    if(e.message.includes('404')||e.message.includes('Could not find')) {
-      await seedAgenda();
-    } else {
-      showError('agenda-error', '⚠ Could not load agenda: '+e.message);
-    }
+    showError('agenda-error', '⚠ Could not load agenda: '+e.message+' — Check your Airtable table name is exactly "Agenda".');
   }
 }
 
@@ -825,52 +868,7 @@ function setNextMeeting() {
 }
 
 // init called after all functions defined below
-</script>
 
-<!-- SETUP SCREEN -->
-<div id="setup-screen" style="display:none;position:fixed;inset:0;background:#f5f6f8;z-index:999;display:flex;align-items:center;justify-content:center;">
-  <div style="background:#fff;border:1px solid #e4e6eb;border-radius:16px;padding:40px;width:460px;max-width:calc(100vw - 32px);box-shadow:0 20px 60px rgba(0,0,0,.12);">
-    <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9ba3b5;margin-bottom:6px;">The Customization Group</div>
-    <div style="font-size:22px;font-weight:700;color:#0d2c6e;margin-bottom:4px;letter-spacing:-.02em;">Quality &amp; Operations Hub</div>
-    <div style="font-size:13px;color:#5a5f6e;margin-bottom:28px;">Enter your Airtable credentials to connect. Saved locally in your browser — never shared.</div>
-
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <div style="display:flex;gap:8px;margin-bottom:4px;">
-        <button onclick="setMode('viewer')" id="mode-viewer"
-          style="flex:1;padding:9px;border:2px solid #0d2c6e;border-radius:8px;background:#0d2c6e;color:#fff;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">
-          View only
-        </button>
-        <button onclick="setMode('editor')" id="mode-editor"
-          style="flex:1;padding:9px;border:2px solid #d0d3db;border-radius:8px;background:#fff;color:#5a5f6e;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;">
-          Editor (facilitator)
-        </button>
-      </div>
-      <div style="font-size:11px;color:#9ba3b5;margin-bottom:16px;">Viewers can see everything but cannot edit. Editors can update status and notes.</div>
-      <div>
-        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a5f6e;display:block;margin-bottom:6px;">Airtable API Token</label>
-        <input id="setup-token" type="password" placeholder="patXXXXXXXXXXXXXX.XXXX…"
-          style="width:100%;border:1px solid #d0d3db;border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;">
-        <div style="font-size:11px;color:#9ba3b5;margin-top:4px;">Get it at airtable.com/create/tokens</div>
-      </div>
-      <div>
-        <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#5a5f6e;display:block;margin-bottom:6px;">Airtable Base ID</label>
-        <input id="setup-base" type="text" placeholder="appXXXXXXXXXXXXXX"
-          style="width:100%;border:1px solid #d0d3db;border-radius:8px;padding:10px 12px;font-family:inherit;font-size:13px;outline:none;">
-        <div style="font-size:11px;color:#9ba3b5;margin-top:4px;">From your Airtable URL: airtable.com/<strong>appXXX</strong>/...</div>
-      </div>
-      <div id="setup-error" style="display:none;background:#fde8e8;border:1px solid #fca5a5;border-radius:8px;padding:10px 12px;font-size:12px;color:#891717;"></div>
-      <button onclick="saveSetup()"
-        style="padding:12px;background:#0d2c6e;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;">
-        Connect to Airtable
-      </button>
-    </div>
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #e4e6eb;font-size:11px;color:#9ba3b5;">
-      Your credentials are stored only in this browser using localStorage. They are never sent anywhere except directly to Airtable.
-      <span style="margin-left:8px;cursor:pointer;color:#2563eb;" onclick="showResetOption()">Change credentials</span>
-    </div>
-  </div>
-</div>
-<script>
 // ── SETUP ─────────────────────────────────────────
 let selectedMode = 'viewer';
 
