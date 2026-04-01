@@ -207,9 +207,8 @@ body.readonly .readonly-badge { display: inline-flex !important; }
   </div>
   <div class="table-card">
     <table class="sp-table"><thead><tr>
-      <th style="width:14%">Process</th><th style="width:18%">KPI</th><th style="width:6%">Unit</th>
-      <th style="width:8%">Site</th><th style="width:8%">Owner</th><th style="width:11%">Status</th>
-      <th style="width:9%">Source</th><th style="width:26%">Notes / highlights</th>
+      <th style="width:18%">Process</th><th style="width:22%">KPI</th><th style="width:7%">Unit</th>
+      <th style="width:10%">Site</th><th style="width:10%">Owner</th><th style="width:14%">Source</th>
     </tr></thead><tbody id="agenda-body"></tbody></table>
   </div>
 </div>
@@ -413,7 +412,7 @@ function renderAgenda() {
   let html='';
   sections.forEach(sec=>{
     const rows=bySec[sec]; if(!rows.length) return;
-    html+=`<tr class="group-row"><td colspan="8">▼ ${sec} <span class="group-count">(${rows.length})</span></td></tr>`;
+    html+=`<tr class="group-row"><td colspan="6">▼ ${sec} <span class="group-count">(${rows.length})</span></td></tr>`;
     rows.forEach(r=>{
       const f=r.fields;
       html+=`<tr class="data-row" onclick="if(!document.body.classList.contains('readonly')) openAgendaEdit('${r.id}')">
@@ -422,9 +421,7 @@ function renderAgenda() {
         <td style="color:var(--text-3)">${f.Unit||''}</td>
         <td>${sitePill(f.Site)}</td>
         <td><span class="own">${f.Owner||'—'}</span></td>
-        <td>${statusBadge(f.Status,'agenda')}</td>
         <td>${f.SourceLabel&&f.SourceLabel!=='—'?`<a href="${f.Source||'#'}" class="src-link" onclick="event.stopPropagation()">${f.SourceLabel} ↗</a>`:'—'}</td>
-        <td>${f.Notes?`<span class="note-text">${f.Notes}</span>`:`<span class="note-empty">Click to add notes…</span>`}</td>
       </tr>`;
     });
   });
