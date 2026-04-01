@@ -751,8 +751,7 @@ function setNextMeeting() {
   document.getElementById('next-date').textContent=`Wed ${next.getDate()} ${months[next.getMonth()]} · 09:00 CET`;
 }
 
-checkSetup();
-if(localStorage.getItem('qh_at_token')) { setNextMeeting(); loadAgenda(); loadOI(); loadArchive(); }
+// init called after all functions defined below
 </script>
 
 <!-- SETUP SCREEN -->
@@ -869,6 +868,15 @@ function showResetOption() {
     localStorage.removeItem('qh_mode');
     location.reload();
   }
+}
+
+// ── INIT (after all functions defined) ───────────
+checkSetup();
+if(localStorage.getItem('qh_at_token')) {
+  setNextMeeting();
+  loadAgenda();
+  loadOI();
+  loadArchive();
 }
 </script>
 </body>
