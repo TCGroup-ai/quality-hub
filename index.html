@@ -93,6 +93,8 @@ body{font-family:'DM Sans',system-ui,sans-serif;font-size:13.5px;color:var(--tex
 .p-cmh{background:var(--cmh-bg);color:var(--cmh-tx);}
 .p-szz{background:var(--szz-bg);color:var(--szz-tx);}
 .p-all{background:var(--all-bg);color:var(--all-tx);}
+.p-btf{background:#fce7f3;color:#831843;}
+.p-sia{background:#fef9c3;color:#713f12;}
 .status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;}
 .status::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
 .s-ok{background:var(--ok-bg);color:var(--ok-tx);}    .s-ok::before{background:var(--ok-dot);}
@@ -201,6 +203,8 @@ body.readonly .readonly-badge { display: inline-flex !important; }
       <span class="filter-pill active" onclick="filterAgenda('all',this)">All sites</span>
       <span class="filter-pill" onclick="filterAgenda('CMH',this)">CMH</span>
       <span class="filter-pill" onclick="filterAgenda('SZZ',this)">SZZ</span>
+      <span class="filter-pill" onclick="filterAgenda('BTF',this)">BTF</span>
+      <span class="filter-pill" onclick="filterAgenda('SIA',this)">SIA</span>
     </div>
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="resetAllStatus()" id="reset-btn">↺ Reset all to Pending</button>
@@ -229,6 +233,8 @@ body.readonly .readonly-badge { display: inline-flex !important; }
       <span class="filter-pill" onclick="filterOI('mine',this)">My actions (AGA)</span>
       <span class="filter-pill" onclick="filterOI('CMH',this)">CMH</span>
       <span class="filter-pill" onclick="filterOI('SZZ',this)">SZZ</span>
+      <span class="filter-pill" onclick="filterOI('BTF',this)">BTF</span>
+      <span class="filter-pill" onclick="filterOI('SIA',this)">SIA</span>
     </div>
   </div>
   <div class="table-card">
@@ -311,8 +317,10 @@ async function atUpdate(table, id, fields) {
 
 // ── Helpers ───────────────────────────────────────
 function sitePill(s) {
-  const c = s==='CMH'?'p-cmh':s==='SZZ'?'p-szz':'p-all';
-  return `<span class="pill ${c}">${s||'All'}</span>`;
+  if(!s) return '<span class="pill p-all">All</span>';
+  const sites = Array.isArray(s) ? s : [s];
+  const cls = {'CMH':'p-cmh','SZZ':'p-szz','BTF':'p-btf','SIA':'p-sia','All':'p-all'};
+  return sites.map(x=>`<span class="pill ${cls[x]||'p-all'}" style="margin-right:3px;">${x}</span>`).join('');
 }
 function statusBadge(s, type='agenda') {
   const m = type==='agenda'
@@ -402,8 +410,10 @@ async function seedAgenda() {
 
 function renderAgenda() {
   const filtered = agendaFilter==='all' ? agendaRecords : agendaRecords.filter(r=>{
-    const site = r.fields.Site||'All';
-    return site===agendaFilter||site==='All';
+    const site = r.fields.Site;
+    if(!site) return true;
+    const sites = Array.isArray(site) ? site : [site];
+    return sites.includes(agendaFilter) || sites.includes('All');
   });
   const bySec = {};
   sections.forEach(s=>bySec[s]=[]);
@@ -524,8 +534,10 @@ function renderOI() {
   let filtered=[...oiRecords];
   if(oiFilter==='overdue') filtered=filtered.filter(r=>r.fields.Status!=='Done'&&isOverdue(r.fields.DueDate));
   else if(oiFilter==='mine') filtered=filtered.filter(r=>r.fields.Owner==='AGA');
-  else if(oiFilter==='CMH') filtered=filtered.filter(r=>['CMH','All'].includes(r.fields.Site));
-  else if(oiFilter==='SZZ') filtered=filtered.filter(r=>['SZZ','All'].includes(r.fields.Site));
+  else if(oiFilter==='CMH') filtered=filtered.filter(r=>{ const s=r.fields.Site; const a=Array.isArray(s)?s:[s]; return a.includes('CMH')||a.includes('All'); });
+  else if(oiFilter==='SZZ') filtered=filtered.filter(r=>{ const s=r.fields.Site; const a=Array.isArray(s)?s:[s]; return a.includes('SZZ')||a.includes('All'); });
+  else if(oiFilter==='BTF') filtered=filtered.filter(r=>{ const s=r.fields.Site; const a=Array.isArray(s)?s:[s]; return a.includes('BTF')||a.includes('All'); });
+  else if(oiFilter==='SIA') filtered=filtered.filter(r=>{ const s=r.fields.Site; const a=Array.isArray(s)?s:[s]; return a.includes('SIA')||a.includes('All'); });
 
   const bySec={};
   sections.forEach(s=>bySec[s]=[]);
@@ -630,9 +642,12 @@ function openNewAction() {
         ${sections.map(s=>`<option>${s}</option>`).join('')}
       </select></div>
     <div class="field-group"><label class="field-label">Site</label>
-      <select class="field-select" id="m-new-site">
-        ${['All','CMH','SZZ'].map(s=>`<option>${s}</option>`).join('')}
-      </select></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;">
+        ${['All','CMH','SZZ','BTF','SIA'].map(s=>`
+          <label style="display:inline-flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" value="${s}" class="site-cb"> ${s}
+          </label>`).join('')}
+      </div></div>
     <div class="field-group"><label class="field-label">Owner (initials)</label>
       <input class="field-input" id="m-new-owner" placeholder="e.g. AWO"></div>
     <div class="field-group"><label class="field-label">Due date</label>
@@ -657,7 +672,7 @@ async function saveNewAction() {
       ActionItem: action,
       Sub: `Opened: ${today.getDate()} ${months[today.getMonth()]} · from weekly review`,
       Section: document.getElementById('m-new-section').value,
-      Site: document.getElementById('m-new-site').value,
+      Site: Array.from(document.querySelectorAll('.site-cb:checked')).map(x=>x.value),
       Owner: document.getElementById('m-new-owner').value.trim()||'TBD',
       DueDate: document.getElementById('m-new-due').value,
       Priority: document.getElementById('m-new-prio').value,
