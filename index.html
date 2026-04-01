@@ -357,11 +357,19 @@ function showError(id, msg) {
 }
 
 // ── TABS ──────────────────────────────────────────
+const tabLoaded = { agenda: false, openitems: false, archive: false };
+
 function showTab(id, btn) {
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   btn.classList.add('active');
+  // Lazy load on first visit
+  if(!tabLoaded[id] && localStorage.getItem('qh_at_token')) {
+    tabLoaded[id] = true;
+    if(id==='openitems') loadOI();
+    if(id==='archive') loadArchive();
+  }
 }
 
 // ── AGENDA ───────────────────────────────────────
@@ -373,6 +381,7 @@ async function loadAgenda() {
     agendaRecords = data;
     renderAgenda();
     showLoading('agenda-loading', false);
+    tabLoaded['agenda'] = true;
   } catch(e) {
     showLoading('agenda-loading', false);
     // Table might not exist yet — seed it
@@ -938,9 +947,7 @@ function showResetOption() {
 checkSetup();
 if(localStorage.getItem('qh_at_token')) {
   setNextMeeting();
-  loadAgenda();
-  loadOI();
-  loadArchive();
+  loadAgenda(); // only load agenda on start
 }
 </script>
 </body>
