@@ -194,10 +194,10 @@ body.readonly .readonly-badge { display: inline-flex !important; }
 <!-- AGENDA -->
 <div id="tab-agenda" class="panel active">
   <div class="page-title">Weekly Quality Review</div>
-  <div class="page-sub">Agenda · CMH &amp; SZZ · Owners update Status and Notes by Tuesday EOD</div>
+  <div class="page-sub">Agenda · CMH · SZZ · BTF · SIA · Owners update Status and Notes by Tuesday EOD</div>
   <div id="agenda-loading" class="loading-bar"><div class="spinner"></div>Loading agenda from Airtable…</div>
   <div id="agenda-error" class="error-bar" style="display:none"></div>
-  <div id="agenda-summary" class="summary-row"></div>
+  <div id="agenda-summary"></div>
   <div class="toolbar">
     <div style="display:flex;gap:6px;">
       <span class="filter-pill active" onclick="filterAgenda('all',this)">All sites</span>
@@ -220,7 +220,7 @@ body.readonly .readonly-badge { display: inline-flex !important; }
 <!-- OPEN ITEMS -->
 <div id="tab-openitems" class="panel">
   <div class="page-title">Open items</div>
-  <div class="page-sub">Action plans · managed by AGA · owners update their own rows</div>
+  <div class="page-sub">Action plans · synced from ClickUp · owners update their rows directly in ClickUp</div>
   <div id="oi-loading" class="loading-bar"><div class="spinner"></div>Loading open items from Airtable…</div>
   <div id="oi-error" class="error-bar" style="display:none"></div>
   <div id="oi-summary" class="summary-row"></div>
@@ -445,7 +445,7 @@ function renderAgenda() {
   });
   document.getElementById('agenda-body').innerHTML = html||'<tr><td colspan="8" style="padding:24px;text-align:center;color:var(--text-3)">No rows found.</td></tr>';
 
-  // Summary
+  // Status strip
   const counts={ok:0,warn:0,alert:0,pend:0};
   agendaRecords.forEach(r=>{
     const s=r.fields.Status;
@@ -454,11 +454,27 @@ function renderAgenda() {
     else if(s==='Alert') counts.alert++;
     else counts.pend++;
   });
-  document.getElementById('agenda-summary').innerHTML=`
-    <div class="sum-card s-alert"><div class="sum-num">${counts.alert}</div><div class="sum-label">Alert</div></div>
-    <div class="sum-card s-warn"><div class="sum-num">${counts.warn}</div><div class="sum-label">Watch</div></div>
-    <div class="sum-card s-ok"><div class="sum-num">${counts.ok}</div><div class="sum-label">On track</div></div>
-    <div class="sum-card s-pend"><div class="sum-num">${counts.pend}</div><div class="sum-label">Pending</div></div>`;
+  const total = agendaRecords.length;
+  const ready = counts.ok + counts.warn + counts.alert;
+  const strip = counts.alert > 0
+    ? \`background:var(--alert-bg);border-color:#fca5a5;color:var(--alert-tx);\`
+    : counts.warn > 0
+    ? \`background:var(--warn-bg);border-color:#fcd34d;color:var(--warn-tx);\`
+    : ready === total
+    ? \`background:var(--ok-bg);border-color:#86efac;color:var(--ok-tx);\`
+    : \`background:var(--pend-bg);border-color:var(--border-mid);color:var(--pend-tx);\`;
+  const msg = counts.alert > 0
+    ? \`\${counts.alert} alert\${counts.alert>1?'s':''} · \${counts.warn} watch · \${counts.ok} on track · \${counts.pend} pending\`
+    : counts.warn > 0
+    ? \`\${counts.warn} item\${counts.warn>1?'s':''} to watch · \${counts.ok} on track · \${counts.pend} pending\`
+    : ready === total
+    ? \`All \${total} sections ready\`
+    : \`\${counts.pend} of \${total} sections pending update · \${ready} already updated\`;
+  document.getElementById('agenda-summary').innerHTML=\`
+    <div style="border:1px solid;border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;\${strip}">
+      <span style="font-size:13px;font-weight:500;">\${msg}</span>
+      <span style="font-size:11px;opacity:.7;">Deadline: Tuesday EOD</span>
+    </div>\`;
 }
 
 function filterAgenda(f,el) {
